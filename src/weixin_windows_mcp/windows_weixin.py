@@ -13,7 +13,6 @@ from weixin_windows_mcp.weixin import Weixin, TabBarItemType, ContactsMasterSubT
     MessageType, ChatMessageClassName, SNSWindowToolBarItemType, ChatMessagePageType, Chat, ChatToolBarButtonType, \
     ChatLogMessage
 
-
 auto.uiautomation.DEBUG_SEARCH_TIME = True
 
 
@@ -124,22 +123,35 @@ class WindowsWeixin(Weixin):
             auto.SendKeys('{ENTER}')
         chat_log_message_list = search_msg_unique_chat_window.ListControl(
             AutomationId='chat_log_message_list', Depth=4)
-        chat_log_message_list.WheelUp(1)
-        time.sleep(0.5)
+        chat_log_message_list.WheelUp(wheelTimes=1, waitTime=1)
         self.wait_for_content_load(chat_log_message_list)
-        chat_log_message_list.WheelDown(1)
-        time.sleep(0.5)
+        chat_log_message_list.WheelDown(wheelTimes=3, waitTime=1)
+        self.wait_for_content_load(chat_log_message_list)
+
+        # 获取列表控件的尺寸
+        list_rect = chat_log_message_list.BoundingRectangle
+        list_width = list_rect.right - list_rect.left
+        list_height = list_rect.bottom - list_rect.top
+
+        # 计算目标位置：水平居中，距离底部10像素
+        target_x = list_width // 2
+        target_y = list_height - 10
+
+        # 移动鼠标到目标位置
+        chat_log_message_list.MoveCursorToInnerPos(target_x, target_y)
+        time.sleep(3)
         print("聊天记录列表控件信息:")
         max_try_count = 10
         # 直接获取所有子控件
         chat_log_messages = []
         try_count = 0
-        # 根据屏幕Y坐标（从上到下）排序
         msg_id_set = set()
         while try_count <= max_try_count:
             chat_log_message_list.Refind()
             children = chat_log_message_list.GetChildren()
             for child in children:
+                if child.BoundingRectangle.bottom > 1000:
+                    print(1)
                 runtime_id = child.GetRuntimeId()
                 if runtime_id in msg_id_set:
                     continue
@@ -164,9 +176,11 @@ class WindowsWeixin(Weixin):
 
                     msg_id_set.add(runtime_id)
                 else:
-                    print(child.Name)
+                    if child.BoundingRectangle.bottom > 1000:
+                        print(child.BoundingRectangle.bottom)
+                        print(child.Name)
 
-            chat_log_message_list.WheelUp(waitTime=0.1)
+            chat_log_message_list.WheelUp(waitTime=0.5)
             self.wait_for_content_load(chat_log_message_list)
             try_count += 1
 
@@ -194,6 +208,7 @@ class WindowsWeixin(Weixin):
     @staticmethod
     def wait_for_content_load(control, timeout=2.0, check_interval=0.1):
         """等待内容加载完成"""
+        control.Refind()
         start_time = time.time()
         previous_items = set()
 

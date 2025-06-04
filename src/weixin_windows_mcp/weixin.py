@@ -121,7 +121,7 @@ class Chat(ABC):
 
 
 class Weixin(ABC):
-    TIME_REGEX = r'^(.*?\s\d{2}:\d{2})\s(.*)$'
+    TIME_REGEX = r'^(?:.*?\s)?(\d{2}:\d{2})\s(.*)$'
 
     def __init__(self):
         # 添加一个线程锁，用于确保同一时间只有一个自动化任务在执行
